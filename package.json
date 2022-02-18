@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Compact binary encoding for topojson data",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "jshint *.js test/*.js && tap test/*.js"
   },
@@ -29,7 +30,9 @@
     "tap": "^15.1.6"
   },
   "dependencies": {
-    "pbf": "^3.2.1"
+    "pbf": "^3.2.1",
+    "@types/pbf": "^3.0.2",
+    "@types/topojson-specification": "^1.0.2"
   },
   "jshintConfig": {
     "trailing": true,
