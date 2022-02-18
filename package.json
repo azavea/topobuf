@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "jshint *.js test/*.js && tap test/*.js"
+    "test": "jshint *.js test/*.js && tap --no-check-coverage test/*.js"
   },
   "repository": {
     "type": "git",

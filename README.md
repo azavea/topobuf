@@ -1,6 +1,6 @@
 # Topobuf
 
-[![Build Status](https://travis-ci.com/azavea/topobuf.svg)](https://travis-ci.org/azavea/topobuf)
+[![Build Status](https://app.travis-ci.com/azavea/topobuf.svg?branch=main)](https://travis-ci.org/azavea/topobuf)
 
 Topobuf is a compact binary encoding for topographic data.
 

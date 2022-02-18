@@ -3,7 +3,7 @@ var topobuf = require("../"),
   test = require("tap").test,
   fs = require("fs");
 
-var files = ["no-transform", "simple", "us-states"];
+var files = ["airports", "multi-line", "props", "no-transform", "simple", "us-states"];
 for (var i = 0; i < files.length; i++) {
   test(
     "roundtrip TopoJSON: " + files[i],
