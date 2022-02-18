@@ -2,7 +2,7 @@
 
 module.exports = encode;
 
-var keys, keysNum, dim, e, isTopo, transformed,
+var keys, keysNum, dim, e, transformed,
     maxPrecision = 1e6;
 
 var geometryTypes = {
@@ -21,7 +21,6 @@ function encode(obj, pbf) {
     dim = 0;
     e = 1;
     transformed = false;
-    isTopo = false;
 
     analyze(obj);
 
@@ -34,10 +33,8 @@ function encode(obj, pbf) {
     if (dim !== 2) pbf.writeVarintField(2, dim);
     if (precision !== 6) pbf.writeVarintField(3, precision);
 
-    if (obj.type === 'FeatureCollection') pbf.writeMessage(4, writeFeatureCollection, obj);
-    else if (obj.type === 'Feature') pbf.writeMessage(5, writeFeature, obj);
-    else if (obj.type === 'Topology') pbf.writeMessage(7, writeTopology, obj);
-    else pbf.writeMessage(6, writeGeometry, obj);
+    if (obj.type === 'Topology') pbf.writeMessage(5, writeTopology, obj);
+    else pbf.writeMessage(4, writeGeometry, obj);
 
     keys = null;
 
@@ -47,19 +44,7 @@ function encode(obj, pbf) {
 function analyze(obj) {
     var i, key;
 
-    if (obj.type === 'FeatureCollection') {
-        for (i = 0; i < obj.features.length; i++) analyze(obj.features[i]);
-        for (key in obj) if (key !== 'type' && key !== 'features') saveKey(key);
-
-    } else if (obj.type === 'Feature') {
-        analyze(obj.geometry);
-        for (key in obj.properties) saveKey(key);
-        for (key in obj) {
-            if (key !== 'type' && key !== 'id' && key !== 'properties' && key !== 'geometry') saveKey(key);
-        }
-
-    } else if (obj.type === 'Topology') {
-        isTopo = true;
+    if (obj.type === 'Topology') {
 
         for (key in obj) {
             if (key !== 'type' && key !== 'transform' && key !== 'arcs' && key !== 'objects') saveKey(key);
@@ -75,13 +60,6 @@ function analyze(obj) {
         else if (obj.type === 'MultiPoint') analyzePoints(obj.coordinates);
         else if (obj.type === 'GeometryCollection') {
             for (i = 0; i < obj.geometries.length; i++) analyze(obj.geometries[i]);
-        }
-        else if (!isTopo) {
-            if (obj.type === 'LineString') analyzePoints(obj.coordinates);
-            else if (obj.type === 'Polygon' || obj.type === 'MultiLineString') analyzeMultiLine(obj.coordinates);
-            else if (obj.type === 'MultiPolygon') {
-                for (i = 0; i < obj.coordinates.length; i++) analyzeMultiLine(obj.coordinates[i]);
-            }
         }
 
         for (key in obj.properties) saveKey(key);
@@ -113,46 +91,27 @@ function saveKey(key) {
     if (keys[key] === undefined) keys[key] = keysNum++;
 }
 
-function writeFeatureCollection(obj, pbf) {
-    for (var i = 0; i < obj.features.length; i++) {
-        pbf.writeMessage(1, writeFeature, obj.features[i]);
-    }
-    writeProps(obj, pbf, true);
-}
-
-function writeFeature(feature, pbf) {
-    pbf.writeMessage(1, writeGeometry, feature.geometry);
-
-    if (feature.id !== undefined) {
-        if (typeof feature.id === 'number' && feature.id % 1 === 0) pbf.writeSVarintField(12, feature.id);
-        else pbf.writeStringField(11, feature.id);
-    }
-
-    if (feature.properties) writeProps(feature.properties, pbf);
-    writeProps(feature, pbf, true);
-}
-
 function writeGeometry(geom, pbf) {
     pbf.writeVarintField(1, geometryTypes[geom.type]);
 
     var coords = geom.coordinates,
-        coordsOrArcs = isTopo ? geom.arcs : coords;
+        arcs = geom.arcs;
 
     if (geom.type === 'Point') writePoint(coords, pbf);
     else if (geom.type === 'MultiPoint') writeLine(coords, pbf, true);
-    else if (geom.type === 'LineString') writeLine(coordsOrArcs, pbf);
-    if (geom.type === 'MultiLineString' || geom.type === 'Polygon') writeMultiLine(coordsOrArcs, pbf);
-    else if (geom.type === 'MultiPolygon') writeMultiPolygon(coordsOrArcs, pbf);
+    else if (geom.type === 'LineString') writeLine(arcs, pbf);
+    if (geom.type === 'MultiLineString' || geom.type === 'Polygon') writeMultiLine(arcs, pbf);
+    else if (geom.type === 'MultiPolygon') writeMultiPolygon(arcs, pbf);
     else if (geom.type === 'GeometryCollection') {
         for (var i = 0; i < geom.geometries.length; i++) pbf.writeMessage(4, writeGeometry, geom.geometries[i]);
     }
 
-    if (isTopo && geom.id !== undefined) {
+    if (geom.id !== undefined) {
         if (typeof geom.id === 'number' && geom.id % 1 === 0) pbf.writeSVarintField(12, geom.id);
         else pbf.writeStringField(11, geom.id);
     }
 
-    if (isTopo && geom.properties) writeProps(geom.properties, pbf);
+    if (geom.properties) writeProps(geom.properties, pbf);
     writeProps(geom, pbf, true);
 }
 
@@ -271,7 +230,7 @@ function writeMultiPolygon(polygons, pbf) {
 function populateLine(coords, line, isMultiPoint) {
     var i, j;
     for (i = 0; i < line.length; i++) {
-        if (isTopo && !isMultiPoint) coords.push(i ? line[i] - line[i - 1] : line[i]);
+        if (!isMultiPoint) coords.push(i ? line[i] - line[i - 1] : line[i]);
         else for (j = 0; j < dim; j++) coords.push(transformCoord(line[i][j] - (i ? line[i - 1][j] : 0)));
     }
 }

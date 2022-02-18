@@ -2,7 +2,7 @@
 
 module.exports = decode;
 
-var keys, values, lengths, dim, e, isTopo, transformed, names;
+var keys, values, lengths, dim, e, transformed, names;
 
 var geometryTypes = ['Point', 'MultiPoint', 'LineString', 'MultiLineString',
                       'Polygon', 'MultiPolygon', 'GeometryCollection'];
@@ -10,7 +10,6 @@ var geometryTypes = ['Point', 'MultiPoint', 'LineString', 'MultiLineString',
 function decode(pbf) {
     dim = 2;
     e = Math.pow(10, 6);
-    isTopo = false;
     transformed = false;
     lengths = null;
 
@@ -27,21 +26,8 @@ function readDataField(tag, obj, pbf) {
     else if (tag === 2) dim = pbf.readVarint();
     else if (tag === 3) e = Math.pow(10, pbf.readVarint());
 
-    else if (tag === 4) readFeatureCollection(pbf, obj);
-    else if (tag === 5) readFeature(pbf, obj);
-    else if (tag === 6) readGeometry(pbf, obj);
-    else if (tag === 7) readTopology(pbf, obj);
-}
-
-function readFeatureCollection(pbf, obj) {
-    obj.type = 'FeatureCollection';
-    obj.features = [];
-    return pbf.readMessage(readFeatureCollectionField, obj);
-}
-
-function readFeature(pbf, feature) {
-    feature.type = 'Feature';
-    return pbf.readMessage(readFeatureField, feature);
+    else if (tag === 4) readGeometry(pbf, obj);
+    else if (tag === 5) readTopology(pbf, obj);
 }
 
 function readGeometry(pbf, geom) {
@@ -49,7 +35,6 @@ function readGeometry(pbf, geom) {
 }
 
 function readTopology(pbf, topology) {
-    isTopo = true;
     topology.type = 'Topology';
     topology.objects = {};
     names = [];
@@ -73,24 +58,6 @@ function readTopologyField(tag, topology, pbf) {
     else if (tag === 15) readProps(pbf, topology);
 }
 
-function readFeatureCollectionField(tag, obj, pbf) {
-    if (tag === 1) obj.features.push(readFeature(pbf, {}));
-
-    else if (tag === 13) values.push(readValue(pbf));
-    else if (tag === 15) readProps(pbf, obj);
-}
-
-function readFeatureField(tag, feature, pbf) {
-    if (tag === 1) feature.geometry = readGeometry(pbf, {});
-
-    else if (tag === 11) feature.id = pbf.readString();
-    else if (tag === 12) feature.id = pbf.readSVarint();
-
-    else if (tag === 13) values.push(readValue(pbf));
-    else if (tag === 14) feature.properties = readProps(pbf, {});
-    else if (tag === 15) readProps(pbf, feature);
-}
-
 function readGeometryField(tag, geom, pbf) {
     if (tag === 1) geom.type = geometryTypes[pbf.readVarint()];
 
@@ -110,12 +77,11 @@ function readGeometryField(tag, geom, pbf) {
 }
 
 function readCoords(geom, pbf, type) {
-    var coordsOrArcs = isTopo ? 'arcs' : 'coordinates';
     if (type === 'Point') geom.coordinates = readPoint(pbf);
     else if (type === 'MultiPoint') geom.coordinates = readLine(pbf, true);
-    else if (type === 'LineString') geom[coordsOrArcs] = readLine(pbf);
-    else if (type === 'MultiLineString' || type === 'Polygon') geom[coordsOrArcs] = readMultiLine(pbf);
-    else if (type === 'MultiPolygon') geom[coordsOrArcs] = readMultiPolygon(pbf);
+    else if (type === 'LineString') geom.arcs = readLine(pbf);
+    else if (type === 'MultiLineString' || type === 'Polygon') geom.arcs = readMultiLine(pbf);
+    else if (type === 'MultiPolygon') geom.arcs = readMultiPolygon(pbf);
 }
 
 function readValue(pbf) {
@@ -162,7 +128,7 @@ function readLinePart(pbf, end, len, isMultiPoint) {
         coords = [],
         p, d;
 
-    if (isTopo && !isMultiPoint) {
+    if (!isMultiPoint) {
         p = 0;
         while (len ? i < len : pbf.pos < end) {
             p += pbf.readSVarint();
