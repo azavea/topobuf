@@ -1,18 +1,16 @@
 {
-  "name": "geobuf",
-  "version": "1.0.1",
-  "description": "Compact binary encoding for geographic data",
+  "name": "topobuf",
+  "version": "1.0.0",
+  "description": "Compact binary encoding for topojson data",
   "main": "index.js",
   "scripts": {
     "test": "jshint *.js test/*.js && tap test/*.js",
     "cov": "istanbul cover test/*.js",
-    "coveralls": "istanbul cover test/*.js && coveralls < ./coverage/lcov.info",
-    "build-min": "mkdirp dist && browserify index.js -s geobuf | uglifyjs -c warnings=false -m > dist/geobuf.js",
-    "build-dev": "mkdirp dist && browserify index.js -d -s geobuf > dist/geobuf-dev.js"
+    "coveralls": "istanbul cover test/*.js && coveralls < ./coverage/lcov.info"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:mapbox/geobuf.git"
+    "url": "git@github.com:azavea/topobuf.git"
   },
   "keywords": [
     "geographic",
@@ -21,14 +19,13 @@
     "protobuf",
     "format",
     "compression",
-    "geojson",
     "topojson"
   ],
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mapbox/geobuf/issues"
+    "url": "https://github.com/azavea/topobuf/issues"
   },
-  "homepage": "https://github.com/mapbox/geobuf",
+  "homepage": "https://github.com/azavea/topobuf",
   "devDependencies": {
     "benchmark": "~1.0.0",
     "coveralls": "~2.11.2",
