@@ -4,9 +4,7 @@
   "description": "Compact binary encoding for topojson data",
   "main": "index.js",
   "scripts": {
-    "test": "jshint *.js test/*.js && tap test/*.js",
-    "cov": "istanbul cover test/*.js",
-    "coveralls": "istanbul cover test/*.js && coveralls < ./coverage/lcov.info"
+    "test": "jshint *.js test/*.js && tap test/*.js"
   },
   "repository": {
     "type": "git",
@@ -27,17 +25,11 @@
   },
   "homepage": "https://github.com/azavea/topobuf",
   "devDependencies": {
-    "benchmark": "~1.0.0",
-    "coveralls": "~2.11.2",
-    "geojson-fixtures": "0.2.0",
-    "istanbul": "~0.3.5",
-    "jshint": "^2.5.11",
-    "mkdirp": "^0.5.0",
-    "tap": "~0.4.13"
+    "jshint": "2.13.4",
+    "tap": "^15.1.6"
   },
   "dependencies": {
-    "concat-stream": "^1.4.7",
-    "pbf": "^1.2.0"
+    "pbf": "^3.2.1"
   },
   "jshintConfig": {
     "trailing": true,
