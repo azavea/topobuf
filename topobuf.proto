@@ -7,23 +7,7 @@ message Data {
     optional uint32 precision = 3 [default = 6]; // number of digits after decimal point for coordinates
 
     oneof data_type {
-        FeatureCollection feature_collection = 4;
-        Feature feature = 5;
-        Geometry geometry = 6;
-        Topology topology = 7;
-    }
-
-
-    message Feature {
-        required Geometry geometry = 1;
-
-        oneof id_type {
-            string id = 11;
-            sint32 int_id = 12;
-        }
-        repeated Value values = 13; // unique values
-        repeated uint32 properties = 14 [packed = true]; // pairs of key/value indexes
-        repeated uint32 custom_properties = 15 [packed = true]; // arbitrary properties
+        Topology topology = 4;
     }
 
     message Geometry {
@@ -39,13 +23,6 @@ message Data {
         }
         repeated Value values = 13;
         repeated uint32 properties = 14 [packed = true];
-        repeated uint32 custom_properties = 15 [packed = true];
-    }
-
-    message FeatureCollection {
-        repeated Feature features = 1;
-
-        repeated Value values = 13;
         repeated uint32 custom_properties = 15 [packed = true];
     }
 

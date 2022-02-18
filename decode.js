@@ -26,8 +26,7 @@ function readDataField(tag, obj, pbf) {
     else if (tag === 2) dim = pbf.readVarint();
     else if (tag === 3) e = Math.pow(10, pbf.readVarint());
 
-    else if (tag === 4) readGeometry(pbf, obj);
-    else if (tag === 5) readTopology(pbf, obj);
+    else if (tag === 4) readTopology(pbf, obj);
 }
 
 function readGeometry(pbf, geom) {
@@ -37,6 +36,7 @@ function readGeometry(pbf, geom) {
 function readTopology(pbf, topology) {
     topology.type = 'Topology';
     topology.objects = {};
+    topology.arcs = [];
     names = [];
     pbf.readMessage(readTopologyField, topology);
     names = null;

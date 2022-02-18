@@ -33,8 +33,7 @@ function encode(obj, pbf) {
     if (dim !== 2) pbf.writeVarintField(2, dim);
     if (precision !== 6) pbf.writeVarintField(3, precision);
 
-    if (obj.type === 'Topology') pbf.writeMessage(5, writeTopology, obj);
-    else pbf.writeMessage(4, writeGeometry, obj);
+    pbf.writeMessage(4, writeTopology, obj);
 
     keys = null;
 
@@ -154,11 +153,7 @@ function writeProps(props, pbf, isCustom) {
     for (var key in props) {
         if (isCustom) {
             if (key === 'type') continue;
-            else if (props.type === 'FeatureCollection') {
-                if (key === 'features') continue;
-            } else if (props.type === 'Feature') {
-                if (key === 'id' || key === 'properties' || key === 'geometry') continue;
-            } else if (props.type === 'Topology')  {
+            else if (props.type === 'Topology')  {
                 if (key === 'transform' || key === 'arcs' || key === 'objects') continue;
             } else if (key === 'id' || key === 'coordinates' || key === 'arcs' ||
                        key === 'geometries' || key === 'properties') continue;
