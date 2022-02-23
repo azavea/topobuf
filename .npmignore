@@ -1,3 +1,6 @@
 .travis.yml
 .vscode/
 test/
+benchmark/
+.github/
+.nyc_output/

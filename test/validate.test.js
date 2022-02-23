@@ -1,4 +1,4 @@
-var topobuf = require("../"),
+var topobuf = require("../index"),
   Pbf = require("pbf"),
   test = require("tap").test,
   fs = require("fs");
