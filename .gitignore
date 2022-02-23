@@ -2,3 +2,7 @@ dist
 coverage
 *.log
 node_modules/
+# Generated test data
+.nyc_output/
+*.pbf
+*.buf

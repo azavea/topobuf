@@ -2,7 +2,7 @@
 
 module.exports = decode;
 
-var keys, values, lengths, dim, e, transformed, names;
+var keys, values, lengths, dim, e, transformed, names, prevP, valuesIndex;
 
 var geometryTypes = ['Point', 'MultiPoint', 'LineString', 'MultiLineString',
                       'Polygon', 'MultiPolygon', 'GeometryCollection'];
@@ -15,8 +15,10 @@ function decode(pbf) {
 
     keys = [];
     values = [];
+    valuesIndex = 0;
     var obj = pbf.readFields(readDataField, {});
     keys = null;
+    values = null;
 
     return obj;
 }
@@ -38,6 +40,7 @@ function readTopology(pbf, topology) {
     topology.objects = {};
     topology.arcs = [];
     names = [];
+    prevP = new Array(dim);
     pbf.readMessage(readTopologyField, topology);
     names = null;
     return topology;
@@ -54,7 +57,7 @@ function readTopologyField(tag, topology, pbf) {
     else if (tag === 4) lengths = pbf.readPackedVarint();
     else if (tag === 5) topology.arcs = readArcs(pbf);
 
-    else if (tag === 13) values.push(readValue(pbf));
+    else if (tag === 13) values[valuesIndex++] = (readValue(pbf));
     else if (tag === 15) readProps(pbf, topology);
 }
 
@@ -71,7 +74,7 @@ function readGeometryField(tag, geom, pbf) {
     else if (tag === 11) geom.id = pbf.readString();
     else if (tag === 12) geom.id = pbf.readSVarint();
 
-    else if (tag === 13) values.push(readValue(pbf));
+    else if (tag === 13) values[valuesIndex++] = (readValue(pbf));
     else if (tag === 14) geom.properties = readProps(pbf, {});
     else if (tag === 15) readProps(pbf, geom);
 }
@@ -105,7 +108,7 @@ function readValue(pbf) {
 function readProps(pbf, props) {
     var end = pbf.readVarint() + pbf.pos;
     while (pbf.pos < end) props[keys[pbf.readVarint()]] = values[pbf.readVarint()];
-    values = [];
+    valuesIndex = 0;
     return props;
 }
 
@@ -125,28 +128,27 @@ function readPoint(pbf) {
 
 function readLinePart(pbf, end, len, isMultiPoint) {
     var i = 0,
-        coords = [],
+        coords = len ? new Array(len) : [],
         p, d;
 
     if (!isMultiPoint) {
         p = 0;
         while (len ? i < len : pbf.pos < end) {
             p += pbf.readSVarint();
-            coords.push(p);
+            coords[i] = p;
             i++;
         }
 
     } else {
-        var prevP = [];
         for (d = 0; d < dim; d++) prevP[d] = 0;
 
         while (len ? i < len : pbf.pos < end) {
-            p = [];
+            p = new Array(dim);
             for (d = 0; d < dim; d++) {
                 prevP[d] += pbf.readSVarint();
                 p[d] = transformCoord(prevP[d]);
             }
-            coords.push(p);
+            coords[i] = p;
             i++;
         }
     }
@@ -162,8 +164,9 @@ function readMultiLine(pbf) {
     var end = pbf.readVarint() + pbf.pos;
     if (!lengths) return [readLinePart(pbf, end)];
 
-    var coords = [];
-    for (var i = 0; i < lengths.length; i++) coords.push(readLinePart(pbf, end, lengths[i]));
+    var len = lengths.length,
+        coords = new Array(len);
+    for (var i = 0; i < len; i++) coords[i] = readLinePart(pbf, end, lengths[i]);
     lengths = null;
     return coords;
 }
@@ -172,30 +175,34 @@ function readMultiPolygon(pbf) {
     var end = pbf.readVarint() + pbf.pos;
     if (!lengths) return [[readLinePart(pbf, end)]];
 
-    var coords = [];
+    var len = lengths[0];
+    var coords = new Array(len);
     var j = 1;
-    for (var i = 0; i < lengths[0]; i++) {
-        var rings = [];
-        for (var k = 0; k < lengths[j]; k++) rings.push(readLinePart(pbf, end, lengths[j + 1 + k]));
+    for (var i = 0; i < len; i++) {
+        var rlen = lengths[j],
+            rings = new Array(rlen);
+        for (var k = 0; k < rlen; k++) rings[k] = readLinePart(pbf, end, lengths[j + 1 + k]);
         j += lengths[j] + 1;
-        coords.push(rings);
+        coords[i] = rings;
     }
     lengths = null;
     return coords;
 }
 
 function readArcs(pbf) {
-    var lines = [],
+    var len = lengths.length,
+        lines = new Array(len),
         end = pbf.readVarint() + pbf.pos;
 
-    for (var i = 0; i < lengths.length; i++) {
-        var ring = [];
-        for (var j = 0; j < lengths[i]; j++) {
-            var p = [];
+    for (var i = 0; i < len; i++) {
+        var rlen = lengths[i],
+            ring = new Array(rlen);
+        for (var j = 0; j < rlen; j++) {
+            var p = new Array(dim);
             for (var d = 0; d < dim && pbf.pos < end; d++) p[d] = transformCoord(pbf.readSVarint());
-            ring.push(p);
+            ring[j] = p;
         }
-        lines.push(ring);
+        lines[i] = ring;
     }
 
     return lines;
