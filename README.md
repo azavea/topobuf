@@ -2,7 +2,7 @@
 
 [![Build Status](https://app.travis-ci.com/azavea/topobuf.svg?branch=main)](https://travis-ci.org/azavea/topobuf)
 
-Topobuf is a compact binary encoding for topographic data.
+Topobuf is a compact binary encoding for topological data.
 
 Topobuf provides _lossless_[^1] compression of [TopoJSON](https://github.com/topojson/topojson) data into [protocol buffers](https://developers.google.com/protocol-buffers/).
 Advantages over using JSON-based formats alone:
