@@ -27,6 +27,7 @@
   "homepage": "https://github.com/azavea/topobuf",
   "devDependencies": {
     "jshint": "2.13.4",
+    "node-fetch": "^3.2.5",
     "tap": "^15.1.6"
   },
   "dependencies": {
