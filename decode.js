@@ -2,7 +2,7 @@
 
 module.exports = decode;
 
-var keys, values, lengths, dim, e, transformed, names, prevP;
+var keys, values, lengths, dim, e, transformed, names, prevP, valuesIndex;
 
 var geometryTypes = ['Point', 'MultiPoint', 'LineString', 'MultiLineString',
                       'Polygon', 'MultiPolygon', 'GeometryCollection'];
@@ -15,8 +15,10 @@ function decode(pbf) {
 
     keys = [];
     values = [];
+    valuesIndex = 0;
     var obj = pbf.readFields(readDataField, {});
     keys = null;
+    values = null;
 
     return obj;
 }
@@ -56,7 +58,7 @@ function readTopologyField(tag, topology, pbf) {
     else if (tag === 4) lengths = pbf.readPackedVarint();
     else if (tag === 5) topology.arcs = readArcs(pbf);
 
-    else if (tag === 13) values.push(readValue(pbf));
+    else if (tag === 13) values[valuesIndex++] = readValue(pbf);
     else if (tag === 15) readProps(pbf, topology);
 }
 
@@ -73,7 +75,7 @@ function readGeometryField(tag, geom, pbf) {
     else if (tag === 11) geom.id = pbf.readString();
     else if (tag === 12) geom.id = pbf.readSVarint();
 
-    else if (tag === 13) values.push(readValue(pbf));
+    else if (tag === 13) values[valuesIndex++] = readValue(pbf);
     else if (tag === 14) geom.properties = readProps(pbf, {});
     else if (tag === 15) readProps(pbf, geom);
 }
@@ -107,7 +109,7 @@ function readValue(pbf) {
 function readProps(pbf, props) {
     var end = pbf.readVarint() + pbf.pos;
     while (pbf.pos < end) props[keys[pbf.readVarint()]] = values[pbf.readVarint()];
-    values = [];
+    valuesIndex = 0;
     return props;
 }
 
