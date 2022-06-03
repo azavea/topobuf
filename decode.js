@@ -2,7 +2,7 @@
 
 module.exports = decode;
 
-var keys, values, lengths, dim, e, transformed, names;
+var keys, values, lengths, dim, e, transformed, names, prevP;
 
 var geometryTypes = ['Point', 'MultiPoint', 'LineString', 'MultiLineString',
                       'Polygon', 'MultiPolygon', 'GeometryCollection'];
@@ -38,8 +38,10 @@ function readTopology(pbf, topology) {
     topology.objects = {};
     topology.arcs = [];
     names = [];
+    prevP = new Array(dim);
     pbf.readMessage(readTopologyField, topology);
     names = null;
+    prevP = null;
     return topology;
 }
 
@@ -137,7 +139,6 @@ function readLinePart(pbf, end, len, isMultiPoint) {
         }
 
     } else {
-        var prevP = [];
         for (d = 0; d < dim; d++) prevP[d] = 0;
 
         while (len ? i < len : pbf.pos < end) {
