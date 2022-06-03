@@ -163,8 +163,9 @@ function readMultiLine(pbf) {
     var end = pbf.readVarint() + pbf.pos;
     if (!lengths) return [readLinePart(pbf, end)];
 
-    var coords = [];
-    for (var i = 0; i < lengths.length; i++) coords.push(readLinePart(pbf, end, lengths[i]));
+    var len = lengths.length,
+        coords = [];
+    for (var i = 0; i < len; i++) coords.push(readLinePart(pbf, end, lengths[i]));
     lengths = null;
     return coords;
 }
@@ -173,11 +174,13 @@ function readMultiPolygon(pbf) {
     var end = pbf.readVarint() + pbf.pos;
     if (!lengths) return [[readLinePart(pbf, end)]];
 
+    var len = lengths[0];
     var coords = [];
     var j = 1;
-    for (var i = 0; i < lengths[0]; i++) {
-        var rings = [];
-        for (var k = 0; k < lengths[j]; k++) rings.push(readLinePart(pbf, end, lengths[j + 1 + k]));
+    for (var i = 0; i < len; i++) {
+        var rlen = lengths[j],
+            rings = [];
+        for (var k = 0; k < rlen; k++) rings.push(readLinePart(pbf, end, lengths[j + 1 + k]));
         j += lengths[j] + 1;
         coords.push(rings);
     }
@@ -186,12 +189,14 @@ function readMultiPolygon(pbf) {
 }
 
 function readArcs(pbf) {
-    var lines = [],
+    var len = lengths.length,
+        lines = [],
         end = pbf.readVarint() + pbf.pos;
 
-    for (var i = 0; i < lengths.length; i++) {
-        var ring = [];
-        for (var j = 0; j < lengths[i]; j++) {
+    for (var i = 0; i < len; i++) {
+        var rlen = lengths[i],
+            ring = [];
+        for (var j = 0; j < rlen; j++) {
             var p = [];
             for (var d = 0; d < dim && pbf.pos < end; d++) p[d] = transformCoord(pbf.readSVarint());
             ring.push(p);
