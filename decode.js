@@ -82,7 +82,7 @@ function readGeometryField(tag, geom, pbf) {
 
 function readCoords(geom, pbf, type) {
     if (type === 'Point') geom.coordinates = readPoint(pbf);
-    else if (type === 'MultiPoint') geom.coordinates = readLine(pbf, true);
+    else if (type === 'MultiPoint') geom.coordinates = readMultiPoint(pbf);
     else if (type === 'LineString') geom.arcs = readLine(pbf);
     else if (type === 'MultiLineString' || type === 'Polygon') geom.arcs = readMultiLine(pbf);
     else if (type === 'MultiPolygon') geom.arcs = readMultiPolygon(pbf);
@@ -127,38 +127,46 @@ function readPoint(pbf) {
     return coords;
 }
 
-function readLinePart(pbf, end, len, isMultiPoint) {
+function readMultiPointPart(pbf, end) {
     var i = 0,
-        coords = len ? new Array(len) : [],
+        coords = [],
         p, d;
 
-    if (!isMultiPoint) {
-        p = 0;
-        while (len ? i < len : pbf.pos < end) {
-            p += pbf.readSVarint();
-            coords[i] = p;
-            i++;
-        }
+    for (d = 0; d < dim; d++) prevP[d] = 0;
 
-    } else {
-        for (d = 0; d < dim; d++) prevP[d] = 0;
-
-        while (len ? i < len : pbf.pos < end) {
-            p = new Array(dim);
-            for (d = 0; d < dim; d++) {
-                prevP[d] += pbf.readSVarint();
-                p[d] = transformCoord(prevP[d]);
-            }
-            coords[i] = p;
-            i++;
+    while (pbf.pos < end) {
+        p = new Array(dim);
+        for (d = 0; d < dim; d++) {
+            prevP[d] += pbf.readSVarint();
+            p[d] = transformCoord(prevP[d]);
         }
+        coords[i] = p;
+        i++;
     }
 
     return coords;
 }
 
-function readLine(pbf, isMultiPoint) {
-    return readLinePart(pbf, pbf.readVarint() + pbf.pos, null, isMultiPoint);
+function readLinePart(pbf, end, len) {
+    var i = 0,
+        coords = len ? new Array(len) : [],
+        p = 0;
+
+    while (len ? i < len : pbf.pos < end) {
+        p += pbf.readSVarint();
+        coords[i] = p;
+        i++;
+    }
+
+    return coords;
+}
+
+function readMultiPoint(pbf) {
+    return readMultiPointPart(pbf, pbf.readVarint() + pbf.pos);
+}
+
+function readLine(pbf) {
+    return readLinePart(pbf, pbf.readVarint() + pbf.pos);
 }
 
 function readMultiLine(pbf) {
